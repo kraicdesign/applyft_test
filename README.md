@@ -13,7 +13,7 @@ Business code uses four top-level layers under `src/`:
 
 See [docs/architecture.md](docs/architecture.md) for the dependency rules and directory conventions. Architecture tests validate namespace placement and prevent forbidden references between layers.
 The default Laravel `app/`, `routes/`, and `database/` source roots are not used. Laravel's application path is mapped to `src/` so framework tooling remains compatible with the DDD source root. Bootstrap is the composition root; route files live in Presentation, while Eloquent models, migrations, factories, and seeders live in Infrastructure.
-File-deletion notification is modeled inside the File domain; RabbitMQ is only the Infrastructure publisher implementation. It is not a separate Notification domain.
+File-deletion notification is modeled inside the File domain.
 
 ## Stack
 
