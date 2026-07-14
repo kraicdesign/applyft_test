@@ -17,6 +17,42 @@ services:
     networks:
       - app
 
+  rabbitmq-consumer:
+    build:
+      context: .
+      dockerfile: .docker/php/Dockerfile
+    restart: unless-stopped
+    user: "${HOST_UID:-1000}:${HOST_GID:-1000}"
+    working_dir: /var/www/html
+    command: php artisan rabbitmq:consume-file-deletion-notifications
+    volumes:
+      - ./:/var/www/html
+      - ./.docker/php/conf.d/99-app.ini:/usr/local/etc/php/conf.d/99-app.ini:ro
+    depends_on:
+      rabbitmq:
+        condition: service_healthy
+    networks:
+      - app
+
+  scheduler:
+    build:
+      context: .
+      dockerfile: .docker/php/Dockerfile
+    restart: unless-stopped
+    user: "${HOST_UID:-1000}:${HOST_GID:-1000}"
+    working_dir: /var/www/html
+    command: php artisan schedule:work
+    volumes:
+      - ./:/var/www/html
+      - ./.docker/php/conf.d/99-app.ini:/usr/local/etc/php/conf.d/99-app.ini:ro
+    depends_on:
+      mysql:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
+    networks:
+      - app
+
   nginx:
     image: nginx:1.29-alpine
     restart: unless-stopped
@@ -29,6 +65,15 @@ services:
       - php
     networks:
       - app
+
+  node:
+    image: node:22-alpine
+    profiles:
+      - tools
+    user: "${HOST_UID:-1000}:${HOST_GID:-1000}"
+    working_dir: /var/www/html
+    volumes:
+      - ./:/var/www/html
 
   mysql:
     image: mysql:8.4

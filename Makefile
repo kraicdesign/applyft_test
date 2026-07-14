@@ -20,9 +20,9 @@ LOGS_ARGS := $(filter-out logs,$(MAKECMDGOALS))
 override MAKECMDGOALS := logs
 endif
 
-.PHONY: install env build start stop down destroy restart ps logs shell-php shell-nginx artisan composer migrate test wait-mysql
+.PHONY: install env build start stop down destroy restart ps logs shell-php shell-nginx artisan composer composer-install frontend-install frontend-build key-generate migrate test wait-mysql
 
-install: env build start composer-install key-generate migrate
+install: env build start composer-install key-generate migrate frontend-build
 
 env:
 	@if [ ! -f .env ]; then cp .env.example .env; fi
@@ -68,6 +68,12 @@ composer:
 
 composer-install:
 	$(DC) exec $(PHP_SERVICE) composer install
+
+frontend-install:
+	$(DC) --profile tools run --rm node npm ci
+
+frontend-build: frontend-install
+	$(DC) --profile tools run --rm node npm run build
 
 key-generate:
 	@$(DC) exec $(PHP_SERVICE) sh -c 'if grep -q "^APP_KEY=$$" .env; then php artisan key:generate; else echo "Application key already exists."; fi'
